@@ -1,27 +1,19 @@
-// Jenkinsfile
+// Jenkinsfile - Simplified for Execution
 pipeline {
-    // This uses a shell agent, assuming you fix the 'docker: not found' issue on the main node
-    agent any 
-
-    // Define environment variables for substitution
-    environment {
-        DOCKER_USER = "jainnetra123" 
-        IMAGE_REPO = "student-dashboard"
-        CREDENTIAL_ID = "dockerhub-credentials"
-    }
+    agent any // Run on the main node
 
     stages {
-        stage('Checkout Code') {
-            steps {
-                echo "Checking out ${BRANCH_NAME} branch..."
-            }
-        }
-        
         stage('Build & Push Docker Image') {
             steps {
                 script {
+                    // Define variables locally within the script block
+                    def DOCKER_USER = "jainnetra123"
+                    def IMAGE_REPO = "student-dashboard"
+                    def CREDENTIAL_ID = "dockerhub-credentials"
                     def tag = "${env.BRANCH_NAME}-${env.BUILD_NUMBER}"
                     def image = "${DOCKER_USER}/${IMAGE_REPO}:${tag}"
+                    
+                    echo "Starting build for image: ${image}"
                     
                     // 1. Build the image
                     sh "docker build -t ${image} ."
@@ -34,7 +26,7 @@ pipeline {
                         sh "docker logout"
                     }
                     
-                    env.IMAGE_NAME = image
+                    env.IMAGE_NAME = image // Set variable for next stage
                 }
             }
         }
@@ -44,16 +36,16 @@ pipeline {
                 script {
                     def envName = (env.BRANCH_NAME == 'main') ? "production" : "test"
                     
-                    // The image name must be explicitly set here for kubectl to use it
+                    sh "echo Deploying ${env.IMAGE_NAME} to ${envName} environment"
+                    
+                    // Substitute image tag and environment name in the YAML file
                     sh """
-                        # We use 'sed' to substitute the dynamic image tag and env name into the YAML file
                         sed -i 's|YOUR_DOCKERHUB_USERNAME/student-dashboard:TAG_NAME|${env.IMAGE_NAME}|g' deployment.yaml
                         sed -i 's|ENV_NAME_PLACEHOLDER|${envName}|g' deployment.yaml
                         
                         # Apply the deployment to Kubernetes
                         kubectl apply -f deployment.yaml
                     """
-                    echo "Deployment complete for ${envName} using image ${env.IMAGE_NAME}"
                 }
             }
         }
