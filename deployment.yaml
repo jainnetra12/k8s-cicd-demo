@@ -1,0 +1,40 @@
+# deployment.yaml (Generic Template)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: student-dashboard-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: student-dashboard
+  template:
+    metadata:
+      labels:
+        app: student-dashboard
+    spec:
+      containers:
+      - name: student-dashboard
+        # Jenkins will replace this image placeholder with the tagged image!
+        image: YOUR_DOCKERHUB_USERNAME/student-dashboard:TAG_NAME
+        ports:
+        - containerPort: 8080
+        env:
+          # Injecting the environment name into the app
+          - name: K8S_ENV
+            value: ENV_NAME_PLACEHOLDER
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: student-dashboard-service
+spec:
+  selector:
+    app: student-dashboard
+  type: NodePort
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080
+      nodePort: 31000 # Use this port for access
