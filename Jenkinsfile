@@ -5,9 +5,9 @@ pipeline {
 
     // Define environment variables for substitution
     environment {
-        DOCKER_USER = 'jainnetra123' 
-        IMAGE_REPO = 'student-dashboard'
-        CREDENTIAL_ID = 'dockerhub-credentials'
+        DOCKER_USER = "jainnetra123" 
+        IMAGE_REPO = "student-dashboard"
+        CREDENTIAL_ID = "dockerhub-credentials"
     }
 
     stages {
